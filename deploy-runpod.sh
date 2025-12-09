@@ -116,6 +116,28 @@ docker-compose build
 echo -e "${GREEN}Step 8: Starting services...${NC}"
 docker-compose up -d
 
+# Step 9: Setup auto-scaler (optional)
+echo -e "${GREEN}Step 9: Setting up auto-scaler...${NC}"
+read -p "Do you want to enable auto-scaling? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Install Python dependencies for auto-scaler
+    pip3 install -r autoscaler-requirements.txt
+
+    # Copy systemd service file
+    cp autoscaler.service /etc/systemd/system/
+
+    # Enable and start the service
+    systemctl daemon-reload
+    systemctl enable autoscaler.service
+    systemctl start autoscaler.service
+
+    echo -e "${GREEN}✓ Auto-scaler enabled${NC}"
+    echo -e "${YELLOW}View logs: journalctl -u autoscaler -f${NC}"
+else
+    echo -e "${YELLOW}⊘ Auto-scaler not enabled (you can enable it later)${NC}"
+fi
+
 echo ""
 echo "================================================"
 echo -e "${GREEN}✓ Deployment Complete!${NC}"
@@ -139,4 +161,14 @@ echo "Your LiveKit credentials:"
 echo "  URL: ws://your-domain.com:7880"
 echo "  (Check .env file for API_KEY and API_SECRET)"
 echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Auto-scaler is running:"
+    echo "  - Monitors LiveKit load every 5 minutes"
+    echo "  - Auto-scales RunPod instances based on demand"
+    echo "  - Stops instances after 30 min of idle time"
+    echo "  - Estimated savings: 70-80% vs 24/7 operation"
+    echo "  - View status: systemctl status autoscaler"
+    echo "  - View logs: journalctl -u autoscaler -f"
+    echo ""
+fi
 echo "================================================"

@@ -183,6 +183,93 @@ Current setup handles **234 concurrent calls**. To scale:
 2. **Horizontal Scaling**: Add more RunPod instances
 3. **Load Balancing**: Use nginx in front of multiple instances
 
+## 🤖 Auto-Scaling (Recommended)
+
+Save **70-80%** on costs by automatically scaling RunPod instances based on demand.
+
+### How It Works
+
+The auto-scaler monitors LiveKit load and:
+- Starts instances when calls come in
+- Scales up when load increases
+- Scales down when load decreases
+- Stops instances after 30 minutes of idle time
+
+### Scaling Rules
+
+| Active Sessions | Instance Type | Cost/Hour | Total Capacity |
+|----------------|---------------|-----------|----------------|
+| 1-30 | RTX 3070 | $0.30 | 30 sessions |
+| 31-80 | RTX 4070 | $0.45 | 80 sessions |
+| 81-150 | RTX 4080 | $0.60 | 150 sessions |
+| 151-240 | RTX 4090 | $0.69 | 240+ sessions |
+
+### Cost Comparison
+
+**Without Auto-Scaling:**
+- RTX 4090 running 24/7: $497/month (₹42,000/month)
+
+**With Auto-Scaling:**
+- Average usage (business hours): ~$100/month (₹8,400/month)
+- **Savings: 80%**
+
+### Setup
+
+Auto-scaler is installed automatically during deployment:
+
+```bash
+sudo ./deploy-runpod.sh
+# Answer "y" when asked about auto-scaling
+```
+
+### Manual Setup
+
+If you skipped it during deployment:
+
+```bash
+# Install dependencies
+pip3 install -r autoscaler-requirements.txt
+
+# Copy service file
+sudo cp autoscaler.service /etc/systemd/system/
+
+# Enable and start
+sudo systemctl daemon-reload
+sudo systemctl enable autoscaler.service
+sudo systemctl start autoscaler.service
+```
+
+### Management
+
+```bash
+# Check status
+sudo systemctl status autoscaler
+
+# View logs
+sudo journalctl -u autoscaler -f
+
+# Restart
+sudo systemctl restart autoscaler
+
+# Stop
+sudo systemctl stop autoscaler
+```
+
+### Configuration
+
+Edit `autoscaler.py` to customize:
+- Scaling thresholds (line 24-49)
+- Check interval (line 258, default: 5 minutes)
+- Idle timeout (line 61, default: 30 minutes)
+- GPU types and costs
+
+### Requirements
+
+- RunPod API key in `.env`
+- LiveKit server accessible
+- Python 3.9+
+- Internet connection for RunPod API
+
 ## 🐛 Troubleshooting
 
 ### Agent not connecting
