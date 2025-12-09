@@ -80,7 +80,7 @@ async def my_agent(ctx: JobContext):
         # Text-to-speech (TTS) using ElevenLabs - high-quality natural voices
         # See more at https://docs.livekit.io/agents/models/tts/plugins/elevenlabs/
         tts=elevenlabs.TTS(
-            model_id="eleven_turbo_v2_5",  # Fast, high-quality model
+            model="eleven_turbo_v2_5",  # Fast, high-quality model
             voice="Rachel",  # Change to your preferred voice
         ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
