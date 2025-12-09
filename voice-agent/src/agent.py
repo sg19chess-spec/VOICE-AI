@@ -11,7 +11,7 @@ from livekit.agents import (
     cli,
     room_io,
 )
-from livekit.plugins import noise_cancellation, openai, sarvam, silero
+from livekit.plugins import elevenlabs, google, noise_cancellation, sarvam, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 logger = logging.getLogger("agent")
@@ -65,7 +65,7 @@ async def my_agent(ctx: JobContext):
         "room": ctx.room.name,
     }
 
-    # Set up a voice AI pipeline using Sarvam AI for Indian languages, OpenAI for LLM
+    # Set up a voice AI pipeline using Sarvam STT, Gemini LLM, and ElevenLabs TTS
     session = AgentSession(
         # Speech-to-text (STT) using Sarvam AI's Saarika - supports 11 Indian languages
         # Auto-detects language or specify: en-IN, hi-IN, bn-IN, ta-IN, te-IN, gu-IN, kn-IN, ml-IN, mr-IN, pa-IN, od-IN
@@ -74,16 +74,14 @@ async def my_agent(ctx: JobContext):
             language="unknown",  # Auto-detect language, or use specific like "en-IN", "hi-IN"
             model="saarika:v2.5"
         ),
-        # A Large Language Model (LLM) is your agent's brain - using OpenAI GPT-4o
-        # See all available models at https://docs.livekit.io/agents/models/llm/
-        llm=openai.LLM(model="gpt-4o"),
-        # Text-to-speech (TTS) using Sarvam AI's Bulbul - natural Indian language voices
-        # Speakers: Female (anushka, manisha, vidya, arya) | Male (abhilash, karun, hitesh)
-        # See more at https://docs.livekit.io/agents/models/tts/plugins/sarvam/
-        tts=sarvam.TTS(
-            target_language_code="en-IN",  # Language for speech output
-            model="bulbul:v2",
-            speaker="anushka"  # Change to your preferred voice
+        # A Large Language Model (LLM) is your agent's brain - using Google Gemini
+        # See all available models at https://docs.livekit.io/agents/models/llm/plugins/google/
+        llm=google.LLM(model="gemini-2.0-flash-exp"),
+        # Text-to-speech (TTS) using ElevenLabs - high-quality natural voices
+        # See more at https://docs.livekit.io/agents/models/tts/plugins/elevenlabs/
+        tts=elevenlabs.TTS(
+            model_id="eleven_turbo_v2_5",  # Fast, high-quality model
+            voice="Rachel",  # Change to your preferred voice
         ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
