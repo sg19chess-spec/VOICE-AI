@@ -36,6 +36,28 @@ services:
     # Use host network for best WebRTC performance
     # network_mode: host  # Uncomment for production
 
+  # SIP Server for Phone Call Integration
+  sip:
+    image: livekit/sip:latest
+    command: --config /etc/sip-config.yaml
+    volumes:
+      - ./sip-config.yaml:/etc/sip-config.yaml
+    ports:
+      - "5060:5060/udp"      # SIP signaling
+      - "5060:5060/tcp"      # SIP signaling (TCP)
+      - "10000-20000:10000-20000/udp"  # RTP media
+    environment:
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - REDIS_HOST=redis:6379
+    depends_on:
+      - livekit
+      - redis
+    restart: unless-stopped
+    networks:
+      - livekit
+
   # Voice Agent Workers
   agent:
     build:
@@ -52,6 +74,7 @@ services:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
       - livekit
+      - sip
     restart: unless-stopped
     networks:
       - livekit

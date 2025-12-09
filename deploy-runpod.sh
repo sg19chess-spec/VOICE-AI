@@ -87,7 +87,10 @@ if command -v ufw &> /dev/null; then
     ufw allow 7880/tcp
     ufw allow 7881/tcp
     ufw allow 3478/udp
-    ufw allow 50000:60000/udp
+    ufw allow 5060/udp        # SIP signaling
+    ufw allow 5060/tcp        # SIP signaling (TCP)
+    ufw allow 10000:20000/udp # SIP RTP media
+    ufw allow 50000:60000/udp # LiveKit WebRTC
     echo -e "${GREEN}✓ Firewall configured${NC}"
 else
     echo -e "${YELLOW}! UFW not found, please configure firewall manually${NC}"

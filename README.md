@@ -13,23 +13,24 @@ A self-hosted voice AI system for 234 MLAs in Tamil Nadu to receive citizen comp
 ## 🏗️ Architecture
 
 ```
-Citizens → LiveKit Server (self-hosted) → Voice Agent → AI Services
-                ↓
-         Complaint Database
-                ↓
-          MLA Dashboard
+Citizens (Phone/Web) → SIP Server → LiveKit Server → Voice Agent → AI Services
+                          ↓                            ↓
+                    Phone Network              Complaint Database
+                                                       ↓
+                                                 MLA Dashboard
 ```
 
 ### Components
 
-1. **LiveKit Server** (Open Source) - WebRTC & Room Management
-2. **Voice Agent** - Handles conversations in Tamil
-3. **AI Services**:
+1. **SIP Server** (Open Source) - Phone call integration via SIP trunks
+2. **LiveKit Server** (Open Source) - WebRTC & Room Management
+3. **Voice Agent** - Handles conversations in Tamil
+4. **AI Services**:
    - Sarvam Saarika - Tamil STT
    - Google Gemini - LLM
    - Sarvam Bulbul - Tamil TTS
-4. **Redis** - Clustering & Queuing
-5. **PostgreSQL** - Complaint storage
+5. **Redis** - Clustering & Queuing
+6. **PostgreSQL** - Complaint storage (planned)
 
 ## 🚀 Quick Start (RunPod Deployment)
 
@@ -112,6 +113,89 @@ uv run python src/agent.py console
 - "வணக்கம், என் பெயர் ராஜ்" (Hello, my name is Raj)
 - "சாலை பழுது குறித்து புகார் தெரிவிக்க வேண்டும்" (I want to complain about road damage)
 - "மின் வசதி இல்லை" (No electricity)
+
+## 📞 Phone Integration (SIP)
+
+The system includes a SIP server that allows citizens to call via regular phone numbers.
+
+### How It Works
+
+1. **Citizen calls** → Phone number (e.g., +91-98765-43210)
+2. **SIP trunk** → Routes to your LiveKit SIP server
+3. **SIP server** → Creates LiveKit room and connects voice agent
+4. **Voice agent** → Handles complaint in Tamil using Sarvam AI
+
+### SIP Providers
+
+You'll need a SIP trunk provider to connect phone numbers:
+
+**Recommended Indian Providers:**
+- **Exotel** - ₹500/month for 1000 minutes
+- **Knowlarity** - ₹1,000/month for 2000 minutes
+- **Twilio** - $1/month per number + $0.017/min
+- **Telnyx** - $0.40/month per number + $0.004/min
+
+### Setup Steps
+
+1. **Sign up with SIP provider** (e.g., Exotel)
+2. **Get phone numbers** - One per MLA or use IVR to route by constituency
+3. **Configure SIP trunk** in `sip-config.yaml`:
+
+```yaml
+trunks:
+  - name: "exotel"
+    address: "sip.exotel.com:5060"
+    username: "your-exotel-username"
+    password: "your-exotel-password"
+    inbound_numbers:
+      - "+919876543210"  # Your phone number
+    outbound_number: "+919876543210"
+```
+
+4. **Restart services:**
+```bash
+docker-compose restart sip
+```
+
+### Architecture Options
+
+**Option 1: One Number Per MLA**
+- 234 phone numbers (one per constituency)
+- Direct routing to specific MLA agent
+- Cost: ₹500 × 234 = ₹1,17,000/month
+
+**Option 2: Single Number with IVR** (Recommended)
+- 1 phone number for all MLAs
+- IVR: "Press 1 for Chennai Anna Nagar, Press 2 for..."
+- OR: "Enter your constituency code"
+- Cost: ₹500/month + per-minute charges
+
+**Option 3: Regional Numbers**
+- 5-10 numbers for different regions
+- IVR sub-menu for specific constituencies
+- Cost: ₹2,500-5,000/month
+
+### Testing SIP
+
+```bash
+# Check SIP server status
+docker-compose logs sip
+
+# View active calls
+docker exec -it sip livekit-cli sip list
+
+# Test with softphone (Zoiper, Linphone)
+# SIP URI: sip:your-server-ip:5060
+```
+
+### Ports Required
+
+The following ports must be open for SIP:
+- **5060/UDP** - SIP signaling
+- **5060/TCP** - SIP signaling (TCP)
+- **10000-20000/UDP** - RTP media (voice)
+
+These are automatically configured by `deploy-runpod.sh`.
 
 ## 🔧 Configuration
 
