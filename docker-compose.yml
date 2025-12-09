@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+  # Redis for LiveKit clustering
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - livekit
+
+  # LiveKit Server
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+      - ./livekit_data:/livekit
+    ports:
+      - "7880:7880"   # WebSocket/API
+      - "7881:7881"   # WebRTC/TCP
+      - "443:443"     # TURN/TLS
+      - "3478:3478/udp"  # TURN/UDP
+      - "50000-60000:50000-60000/udp"  # WebRTC/UDP
+    environment:
+      - LIVEKIT_KEYS=${LIVEKIT_API_KEY}:${LIVEKIT_API_SECRET}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - livekit
+    # Use host network for best WebRTC performance
+    # network_mode: host  # Uncomment for production
+
+  # Voice Agent Workers
+  agent:
+    build:
+      context: ./voice-agent
+      dockerfile: Dockerfile
+    volumes:
+      - ./voice-agent:/app
+      - agent_cache:/root/.cache
+    environment:
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - SARVAM_API_KEY=${SARVAM_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - livekit
+    restart: unless-stopped
+    networks:
+      - livekit
+    deploy:
+      replicas: 1
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  redis_data:
+  agent_cache:
+
+networks:
+  livekit:
+    driver: bridge

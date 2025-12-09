@@ -1,0 +1,88 @@
+# LiveKit Server Configuration for Tamil Nadu MLA System
+port: 7880
+
+# Logging
+log_level: info
+
+# RTC Configuration
+rtc:
+  # TCP port for WebRTC fallback
+  tcp_port: 7881
+
+  # UDP port range for WebRTC media
+  port_range_start: 50000
+  port_range_end: 60000
+
+  # Use external IP (required for cloud deployments)
+  use_external_ip: true
+
+  # ICE servers configuration
+  # use_ice_lite: false
+
+# Redis for clustering
+redis:
+  address: redis:6379
+  # username: ""
+  # password: ""
+  # db: 0
+
+# API Keys (set via environment variables)
+keys:
+  # Format: API_KEY: API_SECRET
+  # These will be injected from docker-compose environment
+
+# TURN Server Configuration (for connectivity through firewalls)
+turn:
+  enabled: true
+  domain: voice.tnmla.in  # Change to your domain
+  tls_port: 443
+  udp_port: 3478
+  # external_tls: true  # Set to true if using external LB for TLS
+
+# Room settings
+room:
+  # Maximum number of participants per room
+  max_participants: 10
+
+  # Empty room timeout (in seconds)
+  empty_timeout: 300
+
+  # Auto-create rooms
+  auto_create: true
+
+# Agent dispatch configuration
+agent:
+  # How long to wait for an agent to accept a job
+  dispatch_timeout: 10s
+
+# Limits
+limit:
+  # Bytes per second
+  # bytes_per_sec: 50_000_000  # 50 MB/s
+
+  # Number of tracks per participant
+  # num_tracks: 25
+
+# Signal relay (for high scale deployments)
+# signal_relay:
+#   enabled: false
+
+# Webhook configuration (for complaint logging)
+# webhook:
+#   api_key: your-webhook-key
+#   urls:
+#     - https://your-api.com/livekit-webhook
+
+# Node configuration
+# node:
+#   # Unique node ID
+#   id: node1
+#
+#   # Node IP
+#   # ip: 0.0.0.0
+
+# Prometheus metrics (for monitoring)
+# prometheus_port: 6789
+
+# Development mode (disable in production)
+# dev_mode: false
