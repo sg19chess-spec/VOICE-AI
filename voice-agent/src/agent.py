@@ -11,7 +11,7 @@ from livekit.agents import (
     cli,
     room_io,
 )
-from livekit.plugins import elevenlabs, google, noise_cancellation, sarvam, silero
+from livekit.plugins import google, noise_cancellation, sarvam, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 logger = logging.getLogger("agent")
@@ -77,10 +77,13 @@ async def my_agent(ctx: JobContext):
         # A Large Language Model (LLM) is your agent's brain - using Google Gemini
         # See all available models at https://docs.livekit.io/agents/models/llm/plugins/google/
         llm=google.LLM(model="gemini-2.0-flash-exp"),
-        # Text-to-speech (TTS) using ElevenLabs - high-quality natural voices
-        # See more at https://docs.livekit.io/agents/models/tts/plugins/elevenlabs/
-        tts=elevenlabs.TTS(
-            voice_id="EXAVITQu4vr4xnSDxMaL",  # Rachel voice
+        # Text-to-speech (TTS) using Sarvam AI's Bulbul - natural Indian language voices
+        # Speakers: Female (anushka, manisha, vidya, arya) | Male (abhilash, karun, hitesh)
+        # See more at https://docs.livekit.io/agents/models/tts/plugins/sarvam/
+        tts=sarvam.TTS(
+            target_language_code="en-IN",  # Language for speech output
+            model="bulbul:v2",
+            speaker="anushka"  # Change to your preferred voice
         ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
