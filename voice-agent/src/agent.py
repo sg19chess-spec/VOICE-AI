@@ -9,10 +9,9 @@ from livekit.agents import (
     JobContext,
     JobProcess,
     cli,
-    inference,
     room_io,
 )
-from livekit.plugins import noise_cancellation, silero
+from livekit.plugins import noise_cancellation, openai, sarvam, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 logger = logging.getLogger("agent")
@@ -23,10 +22,11 @@ load_dotenv(".env.local")
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
-            instructions="""You are a helpful voice AI assistant. The user is interacting with you via voice, even if you perceive the conversation as text.
+            instructions="""You are a helpful voice AI assistant supporting multiple Indian languages. The user is interacting with you via voice.
             You eagerly assist users with their questions by providing information from your extensive knowledge.
-            Your responses are concise, to the point, and without any complex formatting or punctuation including emojis, asterisks, or other symbols.
-            You are curious, friendly, and have a sense of humor.""",
+            Your responses are concise, conversational, and natural - speak as if having a real conversation.
+            Avoid complex formatting, emojis, asterisks, or special symbols in your responses.
+            You are curious, friendly, and have a sense of humor. You can understand and respond in multiple Indian languages.""",
         )
 
     # To add tools, use the @function_tool decorator.
@@ -65,18 +65,25 @@ async def my_agent(ctx: JobContext):
         "room": ctx.room.name,
     }
 
-    # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
+    # Set up a voice AI pipeline using Sarvam AI for Indian languages, OpenAI for LLM
     session = AgentSession(
-        # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # See all available models at https://docs.livekit.io/agents/models/stt/
-        stt=inference.STT(model="assemblyai/universal-streaming", language="en"),
-        # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
+        # Speech-to-text (STT) using Sarvam AI's Saarika - supports 11 Indian languages
+        # Auto-detects language or specify: en-IN, hi-IN, bn-IN, ta-IN, te-IN, gu-IN, kn-IN, ml-IN, mr-IN, pa-IN, od-IN
+        # See more at https://docs.livekit.io/agents/models/stt/plugins/sarvam/
+        stt=sarvam.STT(
+            language="unknown",  # Auto-detect language, or use specific like "en-IN", "hi-IN"
+            model="saarika:v2.5"
+        ),
+        # A Large Language Model (LLM) is your agent's brain - using OpenAI GPT-4o
         # See all available models at https://docs.livekit.io/agents/models/llm/
-        llm=inference.LLM(model="openai/gpt-4.1-mini"),
-        # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
-        # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
-        tts=inference.TTS(
-            model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+        llm=openai.LLM(model="gpt-4o"),
+        # Text-to-speech (TTS) using Sarvam AI's Bulbul - natural Indian language voices
+        # Speakers: Female (anushka, manisha, vidya, arya) | Male (abhilash, karun, hitesh)
+        # See more at https://docs.livekit.io/agents/models/tts/plugins/sarvam/
+        tts=sarvam.TTS(
+            target_language_code="en-IN",  # Language for speech output
+            model="bulbul:v2",
+            speaker="anushka"  # Change to your preferred voice
         ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
