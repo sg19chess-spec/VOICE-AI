@@ -20,13 +20,28 @@ load_dotenv(".env.local")
 
 
 class Assistant(Agent):
-    def __init__(self) -> None:
+    def __init__(self, mla_constituency: str = None) -> None:
         super().__init__(
-            instructions="""You are a helpful voice AI assistant supporting multiple Indian languages. The user is interacting with you via voice.
-            You eagerly assist users with their questions by providing information from your extensive knowledge.
-            Your responses are concise, conversational, and natural - speak as if having a real conversation.
-            Avoid complex formatting, emojis, asterisks, or special symbols in your responses.
-            You are curious, friendly, and have a sense of humor. You can understand and respond in multiple Indian languages.""",
+            instructions=f"""You are a Tamil Nadu MLA's voice assistant helping citizens file complaints.
+
+            Your role:
+            1. Greet the caller warmly in Tamil/English
+            2. Ask for their complaint clearly
+            3. Collect these details:
+               - Name of citizen
+               - Phone number
+               - Area/Village
+               - Type of complaint (roads, water, electricity, health, etc.)
+               - Detailed description
+            4. Confirm all details with the caller
+            5. Provide a complaint reference number
+            6. Thank them and assure action
+
+            Language: Primarily Tamil, but support English if needed.
+            Tone: Respectful, patient, and helpful.
+            Constituency: {mla_constituency or 'All Tamil Nadu'}
+
+            Keep responses concise and clear. Avoid technical jargon.""",
         )
 
     # To add tools, use the @function_tool decorator.
@@ -71,7 +86,7 @@ async def my_agent(ctx: JobContext):
         # Auto-detects language or specify: en-IN, hi-IN, bn-IN, ta-IN, te-IN, gu-IN, kn-IN, ml-IN, mr-IN, pa-IN, od-IN
         # See more at https://docs.livekit.io/agents/models/stt/plugins/sarvam/
         stt=sarvam.STT(
-            language="unknown",  # Auto-detect language, or use specific like "en-IN", "hi-IN"
+            language="ta-IN",  # Tamil language for Tamil Nadu
             model="saarika:v2.5"
         ),
         # A Large Language Model (LLM) is your agent's brain - using Google Gemini
@@ -81,9 +96,9 @@ async def my_agent(ctx: JobContext):
         # Speakers: Female (anushka, manisha, vidya, arya) | Male (abhilash, karun, hitesh)
         # See more at https://docs.livekit.io/agents/models/tts/plugins/sarvam/
         tts=sarvam.TTS(
-            target_language_code="en-IN",  # Language for speech output
+            target_language_code="ta-IN",  # Tamil language for speech output
             model="bulbul:v2",
-            speaker="anushka"  # Change to your preferred voice
+            speaker="anushka"  # Female voice - professional and clear
         ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
