@@ -58,6 +58,26 @@ services:
     networks:
       - livekit
 
+  # Egress for Call Recording
+  egress:
+    image: livekit/egress:latest
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress.yaml
+    volumes:
+      - ./egress.yaml:/etc/egress.yaml
+      - ./recordings:/out  # Local storage for recordings
+    depends_on:
+      - livekit
+      - redis
+    restart: unless-stopped
+    networks:
+      - livekit
+    # Egress needs access to audio devices for recording
+    devices:
+      - /dev/snd:/dev/snd
+    cap_add:
+      - SYS_ADMIN
+
   # Voice Agent Workers
   agent:
     build:
@@ -90,6 +110,7 @@ services:
 volumes:
   redis_data:
   agent_cache:
+  recordings:
 
 networks:
   livekit:

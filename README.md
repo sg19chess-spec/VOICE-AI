@@ -24,13 +24,14 @@ Citizens (Phone/Web) → SIP Server → LiveKit Server → Voice Agent → AI Se
 
 1. **SIP Server** (Open Source) - Phone call integration via SIP trunks
 2. **LiveKit Server** (Open Source) - WebRTC & Room Management
-3. **Voice Agent** - Handles conversations in Tamil
-4. **AI Services**:
+3. **Egress** (Open Source) - Automatic call recording for MLA review
+4. **Voice Agent** - Handles conversations in Tamil
+5. **AI Services**:
    - Sarvam Saarika - Tamil STT
    - Google Gemini - LLM
    - Sarvam Bulbul - Tamil TTS
-5. **Redis** - Clustering & Queuing
-6. **PostgreSQL** - Complaint storage (planned)
+6. **Redis** - Clustering & Queuing
+7. **PostgreSQL** - Complaint storage (planned)
 
 ## 🚀 Quick Start (RunPod Deployment)
 
@@ -196,6 +197,85 @@ The following ports must be open for SIP:
 - **10000-20000/UDP** - RTP media (voice)
 
 These are automatically configured by `deploy-runpod.sh`.
+
+## 🎙️ Call Recording
+
+All calls are **automatically recorded** for MLA review using LiveKit Egress.
+
+### How It Works
+
+1. **Citizen calls/connects** → Recording starts automatically
+2. **Conversation happens** → Full audio captured
+3. **Call ends** → Recording saved as MP3 file
+4. **MLA reviews** → Access via dashboard or file system
+
+### Storage
+
+**Recordings are saved to:**
+```
+recordings/
+├── constituency-name/
+│   ├── call-2025-01-15-09-30-00.mp3
+│   ├── call-2025-01-15-10-15-23.mp3
+│   └── ...
+```
+
+**File format:** MP3 (compressed audio)
+**File size:** ~500 KB per 5-minute call
+**Naming:** `call-{timestamp}.mp3`
+
+### Accessing Recordings
+
+**On RunPod instance:**
+```bash
+# Navigate to recordings
+cd /root/VOICE-AI/recordings
+
+# List recordings for a constituency
+ls chennai-anna-nagar/
+
+# Download to your computer
+scp root@runpod-ip:/root/VOICE-AI/recordings/*.mp3 ./
+```
+
+**Via MLA Dashboard (planned):**
+- Web interface to browse recordings
+- Filter by date, constituency, complaint type
+- Play inline or download
+- Mark as reviewed/resolved
+
+### Storage Requirements
+
+| MLAs | Calls/Day (Each) | Monthly Storage |
+|------|------------------|-----------------|
+| 10   | 20              | 3 GB           |
+| 50   | 20              | 15 GB          |
+| 234  | 20              | **70 GB**      |
+
+**Storage Costs:**
+- Local (RunPod SSD): ~₹500/month for 100GB
+- AWS S3: ~₹150/month for 70GB (recommended)
+
+### Cloud Storage (Production)
+
+For production, configure S3 in `egress.yaml`:
+
+```yaml
+file_output:
+  s3:
+    access_key: YOUR_AWS_ACCESS_KEY
+    secret: YOUR_AWS_SECRET_KEY
+    region: ap-south-1
+    bucket: tn-mla-recordings
+```
+
+**Benefits:**
+- Automatic backups
+- 90-day retention policies
+- Cheaper than local storage
+- Access from anywhere
+
+See **[RECORDINGS.md](./RECORDINGS.md)** for detailed guide.
 
 ## 🔧 Configuration
 
