@@ -1,0 +1,23 @@
+Server URL: wss://livekit-server-production-a48d.up.railway.app
+
+Instructions to generate token manually:
+1. Go to https://jwt.io
+2. Select algorithm: HS256
+3. Paste this payload:
+{
+  "exp": 1733878800,
+  "iss": "MPbzW/lu62PdK+YR7awF6H8IgemQt8JB7Fp7s9i/dHw=",
+  "nbf": 1733857200,
+  "sub": "test-user",
+  "name": "test-user",
+  "video": {
+    "room": "test-room",
+    "roomJoin": true,
+    "canPublish": true,
+    "canSubscribe": true
+  }
+}
+
+4. In "your-256-bit-secret", paste: quOTTctt4qbIUOu4aitlwug+1SBdJ7Wd48KyiaNlias=
+5. Copy the token from the left side
+6. Use it in LiveKit Playground!
