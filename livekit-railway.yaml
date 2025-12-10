@@ -1,0 +1,21 @@
+# Minimal LiveKit config for Railway with Agent API
+port: 7880
+log_level: info
+
+# Enable Agent API
+agent:
+  enabled: true
+
+# Redis
+redis:
+  address: redis.railway.internal:6379
+
+# WebRTC
+rtc:
+  use_external_ip: true
+  tcp_port: 7881
+
+# Rooms
+room:
+  auto_create: true
+  empty_timeout: 300
