@@ -1,16 +1,10 @@
 # LiveKit Configuration for Railway with Agent API
 port: 7880
-log_level: info
+log_level: debug
 
-# AGENT API - ENABLED
-agent:
-  enabled: true
-
-# Redis connection (Railway internal)
-# Use separate host and port fields
-redis:
-  host: redis.railway.internal
-  port: 6379
+# Redis - skip for single-node mode
+# redis:
+#   address: redis.railway.internal:6379
 
 # WebRTC Configuration
 rtc:
@@ -24,6 +18,3 @@ room:
   auto_create: true
   empty_timeout: 300
   max_participants: 10
-
-# Development settings
-dev_mode: false

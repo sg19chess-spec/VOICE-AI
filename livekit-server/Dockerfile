@@ -7,5 +7,5 @@ COPY livekit-config.yaml /etc/livekit.yaml
 # Expose ports
 EXPOSE 7880 7881
 
-# Start LiveKit with config
-CMD ["livekit-server", "--config", "/etc/livekit.yaml", "--bind", "0.0.0.0"]
+# Start LiveKit with config in dev mode (enables Agent API)
+CMD ["livekit-server", "--config", "/etc/livekit.yaml", "--dev", "--bind", "0.0.0.0"]
