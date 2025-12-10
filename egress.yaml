@@ -1,0 +1,54 @@
+# LiveKit Egress Configuration
+# Automatically records all calls for MLA review
+
+# LiveKit connection
+api_key: LIVEKIT_API_KEY
+api_secret: LIVEKIT_API_SECRET
+ws_url: ws://livekit:7880
+
+# Redis for coordination
+redis:
+  address: redis:6379
+
+# Logging
+log_level: info
+
+# Health check
+health_port: 9090
+
+# CPU/resource limits
+cpu_cost:
+  room_composite_cpu_cost: 3.0
+  track_composite_cpu_cost: 2.0
+  track_cpu_cost: 1.0
+
+# File output settings
+file_output:
+  # Local storage (mounted volume)
+  local: true
+
+  # S3-compatible storage (optional - for production)
+  # Uncomment and configure for cloud storage
+  # s3:
+  #   access_key: ${AWS_ACCESS_KEY_ID}
+  #   secret: ${AWS_SECRET_ACCESS_KEY}
+  #   region: ap-south-1
+  #   bucket: tn-mla-recordings
+  #   endpoint: s3.amazonaws.com
+
+# Recording templates
+templates:
+  # Audio-only recording (saves bandwidth and storage)
+  audio_preset:
+    audio_only: true
+    file_type: mp3
+    output_dir: /out/recordings/{room_name}
+    filename_prefix: call-{time}
+
+# Enable simultaneous outputs
+max_simultaneous: 100
+
+# Session limits
+session_limits:
+  # Maximum recording duration (4 hours)
+  max_duration: 14400

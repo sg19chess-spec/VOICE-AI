@@ -1,0 +1,49 @@
+# LiveKit SIP Server Configuration
+# Allows citizens to call via regular phone numbers
+
+# LiveKit connection
+ws_url: ws://livekit:7880
+
+# Redis for state management
+redis:
+  address: redis:6379
+
+# SIP ports
+sip_port: 5060
+rtp_port: 10000-20000
+
+# Use external IP for NAT traversal
+use_external_ip: true
+
+# Logging
+logging:
+  level: info
+  # Set to debug for troubleshooting
+  # level: debug
+
+# SIP trunk configuration (add your provider details)
+# Example for Twilio, Telnyx, Vonage, etc.
+# trunks:
+#   - name: "twilio"
+#     address: "sip.twilio.com:5060"
+#     username: "your-twilio-username"
+#     password: "your-twilio-password"
+#     inbound_numbers:
+#       - "+919876543210"  # Your phone number
+#     outbound_number: "+919876543210"
+
+# Room creation settings
+# Each incoming call creates a LiveKit room
+room:
+  # Prefix for room names
+  name_prefix: "mla-call-"
+  # Maximum participants per call (1 citizen + 1 agent)
+  max_participants: 2
+  # Auto-create rooms for incoming calls
+  auto_create: true
+  # Timeout for empty rooms (seconds)
+  empty_timeout: 300
+
+# DTMF (dial pad) support
+dtmf:
+  enabled: true

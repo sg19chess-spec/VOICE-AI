@@ -1,0 +1,19 @@
+[Unit]
+Description=RunPod Auto-Scaler for Tamil Nadu MLA Voice Agent
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/VOICE-AI
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/root/VOICE-AI/.env
+ExecStart=/usr/bin/python3 /root/VOICE-AI/autoscaler.py
+Restart=always
+RestartSec=30
+StandardOutput=append:/var/log/runpod-autoscaler.log
+StandardError=append:/var/log/runpod-autoscaler.log
+
+[Install]
+WantedBy=multi-user.target
