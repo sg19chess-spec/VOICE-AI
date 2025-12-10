@@ -1,0 +1,32 @@
+# LiveKit SIP Server Configuration for Railway
+# This config connects the SIP server to Railway LiveKit server
+
+# Logging
+logging:
+  level: info
+  # Set to debug for troubleshooting
+  # level: debug
+
+# LiveKit Server Connection
+# These will be overridden by environment variables
+livekit:
+  url: ${LIVEKIT_URL}
+  api_key: ${LIVEKIT_API_KEY}
+  api_secret: ${LIVEKIT_API_SECRET}
+
+# SIP Configuration
+sip:
+  # Port for SIP signaling
+  port: 5060
+
+  # External IP will be auto-detected
+  # use_external_ip: true
+
+  # RTP port range for media
+  rtp_port_range:
+    start: 10000
+    end: 20000
+
+# Health check endpoint
+health:
+  port: 8080
