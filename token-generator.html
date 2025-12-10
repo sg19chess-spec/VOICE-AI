@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveKit Token Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 5px;
+            display: none;
+        }
+        .output.show {
+            display: block;
+        }
+        .token {
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+        .copy-btn {
+            background: #2196F3;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #0b7dda;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 LiveKit Token Generator</h1>
+        <p>Generate JWT tokens for testing your LiveKit voice agent on Railway</p>
+
+        <label>API Key:</label>
+        <input type="text" id="apiKey" value="KHhSGRWrBFS0YPUe0x3s8+hMz5PY46y9O8po+/SgeXI=" placeholder="Your API Key">
+
+        <label>API Secret:</label>
+        <input type="text" id="apiSecret" value="xUpwb5OD4DHbx02Cd1Gz72HmpOCOGdEigqj1RAHmrUTPg78nVmzkPs3SPe6Zr/Xk" placeholder="Your API Secret">
+
+        <label>Room Name:</label>
+        <input type="text" id="roomName" value="test-room" placeholder="test-room">
+
+        <label>User Name:</label>
+        <input type="text" id="userName" value="test-user" placeholder="test-user">
+
+        <label>Token Validity (hours):</label>
+        <input type="number" id="validity" value="6" min="1" max="24">
+
+        <button onclick="generateToken()">🔑 Generate Token</button>
+
+        <div id="output" class="output">
+            <h3>✅ Token Generated!</h3>
+            <p><strong>Server URL:</strong></p>
+            <div class="token">wss://livekit-server-production-a48d.up.railway.app</div>
+            <button class="copy-btn" onclick="copyText('wss://livekit-server-production-a48d.up.railway.app')">📋 Copy URL</button>
+
+            <p style="margin-top: 20px;"><strong>Token:</strong></p>
+            <div class="token" id="tokenOutput"></div>
+            <button class="copy-btn" onclick="copyToken()">📋 Copy Token</button>
+
+            <div class="info">
+                <h4>📝 Next Steps:</h4>
+                <ol>
+                    <li>Go to <a href="https://meet.livekit.io/custom" target="_blank">https://meet.livekit.io/custom</a></li>
+                    <li>Paste the Server URL</li>
+                    <li>Paste the Token</li>
+                    <li>Click "Connect"</li>
+                    <li>Allow microphone access</li>
+                    <li>Speak in Tamil or English! 🎤</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateToken() {
+            const apiKey = document.getElementById('apiKey').value;
+            const apiSecret = document.getElementById('apiSecret').value;
+            const roomName = document.getElementById('roomName').value;
+            const userName = document.getElementById('userName').value;
+            const validity = parseInt(document.getElementById('validity').value);
+
+            // Create JWT payload
+            const now = Math.floor(Date.now() / 1000);
+            const exp = now + (validity * 60 * 60); // validity in hours
+
+            const header = {
+                alg: "HS256",
+                typ: "JWT"
+            };
+
+            const payload = {
+                exp: exp,
+                iss: apiKey,
+                nbf: now,
+                sub: userName,
+                name: userName,
+                video: {
+                    room: roomName,
+                    roomJoin: true,
+                    canPublish: true,
+                    canSubscribe: true
+                }
+            };
+
+            // Encode header and payload
+            const stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+            const encodedHeader = base64url(stringifiedHeader);
+
+            const stringifiedPayload = CryptoJS.enc.Utf8.parse(JSON.stringify(payload));
+            const encodedPayload = base64url(stringifiedPayload);
+
+            const token = encodedHeader + "." + encodedPayload;
+
+            // Sign the token
+            const signature = base64url(CryptoJS.HmacSHA256(token, apiSecret));
+            const signedToken = token + "." + signature;
+
+            // Display output
+            document.getElementById('tokenOutput').textContent = signedToken;
+            document.getElementById('output').classList.add('show');
+        }
+
+        function base64url(source) {
+            // Encode in classical base64
+            let encodedSource = CryptoJS.enc.Base64.stringify(source);
+
+            // Remove padding equal characters
+            encodedSource = encodedSource.replace(/=+$/, '');
+
+            // Replace characters according to base64url specifications
+            encodedSource = encodedSource.replace(/\+/g, '-');
+            encodedSource = encodedSource.replace(/\//g, '_');
+
+            return encodedSource;
+        }
+
+        function copyToken() {
+            const token = document.getElementById('tokenOutput').textContent;
+            copyText(token);
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
