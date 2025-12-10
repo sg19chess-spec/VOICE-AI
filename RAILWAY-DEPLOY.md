@@ -1,41 +1,246 @@
 # Railway Deployment Guide
 
-Deploy Tamil Nadu MLA Voice Complaint System to Railway in 10 minutes.
+Deploy Tamil Nadu MLA Voice Complaint System to Railway.
 
-## 🚀 Quick Start
+## ⚠️ Important: Railway Multi-Service Setup
 
-### Prerequisites
-- GitHub account
-- Railway account (free: https://railway.app)
-- Your API keys ready
+Railway **no longer supports docker-compose** directly. Instead, you deploy each service separately within a single Railway project.
 
-### Method 1: One-Click Deploy (Easiest)
+## 🚀 Quick Start (Recommended Path)
 
-1. **Fork this repo** to your GitHub
+### Option 1: Deploy Just the Voice Agent (Simplest)
 
-2. **Go to Railway**: https://railway.app
+This deploys only your custom voice agent. LiveKit server runs elsewhere (LiveKit Cloud free tier or separate VPS).
 
-3. **Click "New Project"** → **"Deploy from GitHub repo"**
+**Step 1: Deploy Voice Agent to Railway**
 
-4. **Select your forked repo**
-
-5. **Railway auto-detects** docker-compose and deploys!
-
-6. **Set environment variables** in Railway dashboard:
+1. Go to https://railway.app
+2. Click "New Project" → "Deploy from GitHub repo"
+3. Select your `VOICE-AI` repo
+4. Railway detects `voice-agent/Dockerfile`
+5. Set environment variables:
    ```
-   LIVEKIT_API_KEY=<generate with: openssl rand -base64 32>
-   LIVEKIT_API_SECRET=<generate with: openssl rand -base64 48>
+   LIVEKIT_URL=wss://your-livekit-server.com
+   LIVEKIT_API_KEY=<your-key>
+   LIVEKIT_API_SECRET=<your-secret>
    SARVAM_API_KEY=sk_iaapa9l4_pc4l7fFmz1xru1RhSQ5wjzuL
    GOOGLE_API_KEY=AIzaSyCZ66PBhYc686h8KtjC1x_K2yeq8i5LuUI
    ```
+6. Deploy!
 
-7. **Done!** Railway builds and deploys everything.
+**Where to run LiveKit Server:**
+- LiveKit Cloud free tier: https://cloud.livekit.io (FREE for testing)
+- Small VPS: DigitalOcean $6/month droplet
+- Railway (add as separate service - see Option 2)
 
-**Total time: 5 minutes**
+**Cost: $5-10/month** (just the agent)
 
 ---
 
-## Method 2: Railway CLI (Manual Control)
+### Option 2: Deploy Full Stack on Railway (Advanced)
+
+Deploy all services (LiveKit, SIP, Recording, Agent) as separate Railway services.
+
+**Step 1: Create Railway Project**
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Create new project
+railway init
+# Name it: "tn-mla-voice-system"
+```
+
+**Step 2: Add Redis Service**
+
+```bash
+# In Railway dashboard or CLI
+railway add
+# Select: Redis
+```
+
+**Step 3: Add LiveKit Service**
+
+In Railway dashboard:
+1. Click "New Service" → "Docker Image"
+2. Image: `livekit/livekit-server:latest`
+3. Add environment variable:
+   ```
+   LIVEKIT_KEYS=<api-key>:<api-secret>
+   ```
+4. Add ports:
+   - 7880 (HTTP)
+   - 7881 (WebRTC TCP)
+5. Deploy
+
+**Step 4: Add SIP Service**
+
+1. Click "New Service" → "Docker Image"
+2. Image: `livekit/sip:latest`
+3. Add environment variables:
+   ```
+   LIVEKIT_URL=http://livekit:7880
+   LIVEKIT_API_KEY=<your-key>
+   LIVEKIT_API_SECRET=<your-secret>
+   ```
+4. Add ports:
+   - 5060 (UDP/TCP)
+5. Deploy
+
+**Step 5: Add Egress (Recording) Service**
+
+1. Click "New Service" → "Docker Image"
+2. Image: `livekit/egress:latest`
+3. Add volume for recordings
+4. Deploy
+
+**Step 6: Add Voice Agent Service**
+
+1. Click "New Service" → "GitHub Repo"
+2. Select `VOICE-AI` repo
+3. Root directory: `voice-agent`
+4. Add environment variables:
+   ```
+   LIVEKIT_URL=http://livekit:7880
+   LIVEKIT_API_KEY=<your-key>
+   LIVEKIT_API_SECRET=<your-secret>
+   SARVAM_API_KEY=sk_iaapa9l4_pc4l7fFmz1xru1RhSQ5wjzuL
+   GOOGLE_API_KEY=AIzaSyCZ66PBhYc686h8KtjC1x_K2yeq8i5LuUI
+   ```
+5. Deploy
+
+**Cost: $30-60/month** (all services)
+
+---
+
+## 💡 Simpler Alternative: Use LiveKit Cloud Free Tier
+
+Instead of self-hosting LiveKit on Railway, use LiveKit Cloud's free tier:
+
+**Step 1: Sign up for LiveKit Cloud**
+https://cloud.livekit.io
+
+**Step 2: Get credentials**
+- LiveKit URL: `wss://your-project.livekit.cloud`
+- API Key: (from dashboard)
+- API Secret: (from dashboard)
+
+**Step 3: Deploy just your agent to Railway**
+```bash
+cd voice-agent
+railway init
+railway up
+```
+
+**Step 4: Set environment variables**
+```bash
+railway variables set LIVEKIT_URL=wss://your-project.livekit.cloud
+railway variables set LIVEKIT_API_KEY=<from-livekit-cloud>
+railway variables set LIVEKIT_API_SECRET=<from-livekit-cloud>
+railway variables set SARVAM_API_KEY=sk_iaapa9l4_pc4l7fFmz1xru1RhSQ5wjzuL
+railway variables set GOOGLE_API_KEY=AIzaSyCZ66PBhYc686h8KtjC1x_K2yeq8i5LuUI
+```
+
+**Cost:**
+- LiveKit Cloud: FREE (up to 500 minutes/month)
+- Railway Agent: $5-10/month
+- **Total: $5-10/month** for testing!
+
+---
+
+## 🎯 Recommended Approach
+
+For Tamil Nadu MLA system:
+
+### Phase 1: Testing (5-10 MLAs)
+**Use LiveKit Cloud Free Tier + Railway Agent**
+- Cost: $5-10/month (₹400-800/month)
+- Setup: 10 minutes
+- Perfect for validation
+
+### Phase 2: Scaling (10-50 MLAs)
+**LiveKit Cloud Paid + Railway Agent**
+- Cost: $50-100/month (₹4,200-8,400/month)
+- No infrastructure management
+
+### Phase 3: Full Scale (234 MLAs)
+**Self-hosted on VPS or RunPod**
+- Cost: ₹6,000/month
+- Full control
+- Unlimited usage
+
+---
+
+## 📋 Railway CLI Commands
+
+```bash
+# Deploy
+railway up
+
+# View logs
+railway logs
+railway logs -f  # Follow
+
+# Environment variables
+railway variables set KEY=value
+
+# Restart
+railway restart
+
+# Open dashboard
+railway open
+
+# Link to project
+railway link
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: "dockerfile parse error"
+**Cause:** Railway trying to parse docker-compose as Dockerfile
+
+**Fix:** Deploy services separately (see Option 2 above)
+
+### Error: "Service won't start"
+**Check:**
+1. Environment variables are set
+2. LIVEKIT_URL is accessible
+3. Ports are configured correctly
+
+### Error: "Can't connect to LiveKit"
+**Fix:**
+- If using Railway LiveKit: Use internal URL `http://livekit:7880`
+- If using LiveKit Cloud: Use external URL `wss://your-project.livekit.cloud`
+
+---
+
+## ✅ Success Checklist
+
+After deployment:
+- [ ] Agent service is running
+- [ ] Can see logs in Railway dashboard
+- [ ] Environment variables are set
+- [ ] Test call works
+- [ ] Recordings are saved (if using Egress)
+
+---
+
+## 💰 Final Cost Summary
+
+| Setup | Monthly Cost | Best For |
+|-------|-------------|----------|
+| **LiveKit Cloud Free + Railway Agent** | ₹400-800 | Testing 5-10 MLAs |
+| **LiveKit Cloud Paid + Railway Agent** | ₹4,200-8,400 | 10-50 MLAs |
+| **Full Railway Stack** | ₹5,000-10,000 | 50-100 MLAs |
+| **RunPod Self-Hosted** | ₹6,000 | 234 MLAs |
+
+**Recommendation:** Start with option 1, scale to option 4.
 
 ### Step 1: Install Railway CLI
 
